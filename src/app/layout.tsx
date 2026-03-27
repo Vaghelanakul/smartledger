@@ -1,0 +1,33 @@
+import type { Metadata } from "next";
+import { Manrope, Space_Grotesk } from "next/font/google";
+import "./globals.css";
+import { Providers } from "@/components/providers";
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "SmartLedger - Expense Manager",
+  description: "A comprehensive expense and income management system",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${manrope.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}
