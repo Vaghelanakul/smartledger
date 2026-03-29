@@ -1,0 +1,175 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+// Users table - System users for authentication
+model User {
+  id           Int       @id @default(autoincrement()) @map("UserID")
+  userName     String    @map("UserName") @db.VarChar(250)
+  emailAddress String    @unique @map("EmailAddress") @db.VarChar(500)
+  password     String    @map("Password") @db.VarChar(60)
+  mobileNo     String?   @map("MobileNo") @db.VarChar(50)
+  profileImage String?   @map("ProfileImage") @db.VarChar(500)
+  role         String    @default("user") @map("Role") @db.VarChar(20) // admin or user
+  created      DateTime  @default(now()) @map("Created")
+  modified     DateTime  @updatedAt @map("Modified")
+
+  // Relations
+  peoples      People[]
+  projects     Project[]
+  categories   Category[]
+  subCategories SubCategory[]
+  expenses     Expense[]
+  incomes      Income[]
+
+  @@map("users")
+}
+
+// Peoples table - Employee/people records
+model People {
+  id          Int       @id @default(autoincrement()) @map("PeopleID")
+  peopleCode  String?   @map("PeopleCode") @db.VarChar(50)
+  password    String?   @map("Password") @db.VarChar(50)
+  peopleName  String    @map("PeopleName") @db.VarChar(250)
+  email       String?   @map("Email") @db.VarChar(150)
+  mobileNo    String?   @map("MobileNo") @db.VarChar(10)
+  description String?   @map("Description") @db.VarChar(500)
+  userId      Int       @map("UserID")
+  created     DateTime  @default(now()) @map("Created")
+  modified    DateTime  @updatedAt @map("Modified")
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses    Expense[]
+  incomes     Income[]
+
+  @@map("peoples")
+}
+
+// Categories table - Expense/Income categories
+model Category {
+  id           Int       @id @default(autoincrement()) @map("CategoryID")
+  categoryName String    @map("CategoryName") @db.VarChar(250)
+  logoPath     String?   @map("LogoPath") @db.VarChar(250)
+  isExpense    Boolean   @default(true) @map("IsExpense")
+  isIncome     Boolean   @default(false) @map("IsIncome")
+  isActive     Boolean   @default(true) @map("IsActive")
+  description  String?   @map("Description") @db.VarChar(500)
+  userId       Int       @map("UserID")
+  created      DateTime  @default(now()) @map("Created")
+  modified     DateTime  @updatedAt @map("Modified")
+  sequence     Decimal?  @map("Sequence") @db.Decimal
+
+  // Relations
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subCategories SubCategory[]
+  expenses     Expense[]
+  incomes      Income[]
+
+  @@map("categories")
+}
+
+// SubCategories table - Subcategories under each category
+model SubCategory {
+  id              Int       @id @default(autoincrement()) @map("SubCategoryID")
+  categoryId      Int       @map("CategoryID")
+  subCategoryName String    @map("SubCategoryName") @db.VarChar(250)
+  logoPath        String?   @map("LogoPath") @db.VarChar(250)
+  isExpense       Boolean   @default(true) @map("IsExpense")
+  isIncome        Boolean   @default(false) @map("IsIncome")
+  isActive        Boolean   @default(true) @map("IsActive")
+  description     String?   @map("Description") @db.VarChar(500)
+  userId          Int       @map("UserID")
+  created         DateTime  @default(now()) @map("Created")
+  modified        DateTime  @updatedAt @map("Modified")
+  sequence        Decimal?  @map("Sequence") @db.Decimal
+
+  // Relations
+  category        Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses        Expense[]
+  incomes         Income[]
+
+  @@map("sub_categories")
+}
+
+// Projects table - Project/department records
+model Project {
+  id             Int       @id @default(autoincrement()) @map("ProjectID")
+  projectName    String    @map("ProjectName") @db.VarChar(250)
+  projectLogo    String?   @map("ProjectLogo") @db.VarChar(250)
+  projectStartDate DateTime? @map("ProjectStartDate")
+  projectEndDate DateTime?  @map("ProjectEndDate")
+  projectDetail  String?   @map("ProjectDetail") @db.VarChar(500)
+  description    String?   @map("Description") @db.VarChar(500)
+  userId         Int       @map("UserID")
+  created        DateTime  @default(now()) @map("Created")
+  modified       DateTime  @updatedAt @map("Modified")
+  isActive       Boolean   @default(true) @map("IsActive")
+
+  // Relations
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses       Expense[]
+  incomes        Income[]
+
+  @@map("projects")
+}
+
+// Expenses table - Expense transaction records
+model Expense {
+  id             Int       @id @default(autoincrement()) @map("ExpenseID")
+  expenseDate    DateTime  @map("ExpenseDate")
+  categoryId     Int?      @map("CategoryID")
+  subCategoryId  Int?      @map("SubCategoryID")
+  peopleId       Int?      @map("PeopleID")
+  projectId      Int?      @map("ProjectID")
+  amount         Decimal   @map("Amount") @db.Decimal
+  expenseDetail  String?   @map("ExpenseDetail") @db.VarChar(500)
+  attachmentPath String?   @map("AttachmentPath") @db.VarChar(250)
+  description    String?   @map("Description") @db.VarChar(500)
+  userId         Int       @map("UserID")
+  created        DateTime  @default(now()) @map("Created")
+  modified       DateTime  @updatedAt @map("Modified")
+
+  // Relations
+  category       Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  subCategory    SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
+  people         People?      @relation(fields: [peopleId], references: [id], onDelete: SetNull)
+  project        Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("expenses")
+}
+
+// Incomes table - Income transaction records
+model Income {
+  id             Int       @id @default(autoincrement()) @map("IncomeID")
+  incomeDate     DateTime  @map("IncomeDate")
+  categoryId     Int?      @map("CategoryID")
+  subCategoryId  Int?      @map("SubCategoryID")
+  peopleId       Int?      @map("PeopleID")
+  projectId      Int?      @map("ProjectID")
+  amount         Decimal   @map("Amount") @db.Decimal
+  incomeDetail   String?   @map("IncomeDetail") @db.VarChar(500)
+  attachmentPath String?   @map("AttachmentPath") @db.VarChar(250)
+  description    String?   @map("Description") @db.VarChar(500)
+  userId         Int       @map("UserID")
+  created        DateTime  @default(now()) @map("Created")
+  modified       DateTime  @updatedAt @map("Modified")
+
+  // Relations
+  category       Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  subCategory    SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
+  people         People?      @relation(fields: [peopleId], references: [id], onDelete: SetNull)
+  project        Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("incomes")
+}
